@@ -159,6 +159,7 @@ if __name__ == '__main__':
     url = "http://bili.let-1977cdn.com/20190818/FQRL7kuS/800kb/hls/index.m3u8"
     # url = "https://cn1.ruioushang.com/hls/20190908/eeb179af66aa56eb381d7f7edba0fcfb/1567926692/index.m3u8"
     filename = '罗小黑战记大电影.mp4'
+    speed = 20
 
     type = cf.getint("Mode", "type")
     if type == 1:
@@ -169,5 +170,8 @@ if __name__ == '__main__':
     elif type == 2:
         url = cf.get("Download", "url")
         filename = cf.get("Download", "filename") + ".mp4"
+        speed = int(cf.get("Download", "speed"))
+
     pm = ParseM3u8()
+    pm.setStepSize(speed)
     pm.start(url, filename)
