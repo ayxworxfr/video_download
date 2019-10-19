@@ -6,3 +6,6 @@
 
 双击**run.bat**文件即可下载 罗小黑战记大电影
 
+
+
+**ParseM3u8.exe**是我已经静态编译的文件，与**config.ini**文件一起使用，你也可以运行install.bat编译自己修改的ParseM3u8.py文件

@@ -34,7 +34,6 @@ class ParseM3u8:
 
         #新建日期文件夹
         download_path = os.path.join(download_path, datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
-        print("download_path: ", download_path)
         os.mkdir(download_path)
         self.path = download_path
 
@@ -75,7 +74,6 @@ class ParseM3u8:
             if not self.isRealM3u8:
                 text_tem = requests.get(url, timeout=10).text  # 获取M3U8文件内容
                 url_real = self.base + text_tem.split("\n")[2]
-                # print("url_real: ", url_real)
                 # 更新 base
                 self.base = re.findall(r'(.*//.*?/)', url)
                 if(url[:5] != 'https'):
@@ -97,18 +95,14 @@ class ParseM3u8:
 
             for item in items:
                 item = self.base + item
-                # print("pd_url: ", item)
                 self.list_ts.append(item)
             print(len(self.list_ts), "个url解析完成")
         except Exception as e:
-            print(e)
-            print("重新解析m3u8")
             return self.parseM3u8(url)
 
     async def download(self, name):
         file_name = re.findall('.*/(.*)', name)[0]
         try:
-            # print("pd_url: ", name)
             async with aiohttp.request("GET", name, headers = self.headers) as res:
                 data = await res.read()
 
@@ -122,9 +116,6 @@ class ParseM3u8:
 
         # 报错提示
         except Exception as e:
-            print(e)
-            print(file_name, '下载失败')
-
             # 记录日志
             my_log = logging.getLogger('lo')
             my_log.setLevel(logging.DEBUG)
