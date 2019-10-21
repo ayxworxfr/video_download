@@ -9,17 +9,19 @@ import asyncio #当异步请求返回时,通知异步操作完成
 import configparser
 
 class ParseM3u8:
-    base = ''       # 网站根目录
-    step_size = 20  # 异步步长
-    total_ts = 0    # 总ts数量
-    current = 1     # 正在下载ts编号
+    base = ''           # 网站根目录
+    step_size = 20      # 异步步长
+    total_ts = 0        # 总ts数量
+    current = 1         # 正在下载ts编号
+    isRealM3u8 = True   # 是否是真正的m3u8链接
     list_ts = []
     headers = {
         # 'Connection': 'keep - alive',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36'
     }
 
-    def __init__(self, isRealM3u8 = True):
+    # 设置是否是真正的m3u8链接
+    def setIsRealM3u8(self, isRealM3u8 = True):
         self.isRealM3u8 = isRealM3u8
 
     # 设置异步步长
@@ -67,17 +69,20 @@ class ParseM3u8:
         # 根据实际情况修改(不同m3u8文件base截取方式可能不同)
         self.base = re.findall(r'(.*//.*?)/', url)[0]
         if(url[:5] != 'https'):
-        	self.base = url.rsplit("/", 1)[0] + "/"
+            self.base = url.rsplit("/", 1)[0] + "/"
         try:
             url_real = url
             # 得到真正的m3u8 url
             if not self.isRealM3u8:
                 text_tem = requests.get(url, timeout=10).text  # 获取M3U8文件内容
-                url_real = self.base + text_tem.split("\n")[2]
                 # 更新 base
-                self.base = re.findall(r'(.*//.*?/)', url)
-                if(url[:5] != 'https'):
-                    self.base = url.rsplit("/", 1)[0] + "/"
+                self.base = url.rsplit("/", 1)[0]
+                if(re.findall(r'.*?//(.*?)//', url) != []):
+                    self.base = url.rsplit("//", 1)[0]
+                str_tem = text_tem.split("\n")[2]
+                # 默认self.base不是以'/'结尾，如果str_tem[0]没有以'/'开头则self.base以'/'结尾
+                self.base = self.base if(str_tem[0] == '/') else (self.base + '/')
+                url_real = self.base + str_tem
 
             all_content = requests.get(url_real, timeout=10).text  # 获取第一层M3U8文件内容
             if "#EXTM3U" not in all_content:
@@ -117,6 +122,7 @@ class ParseM3u8:
         # 报错提示
         except Exception as e:
             # 记录日志
+            """
             my_log = logging.getLogger('lo')
             my_log.setLevel(logging.DEBUG)
             file = logging.FileHandler('error.log', encoding='utf-8')
@@ -126,6 +132,7 @@ class ParseM3u8:
             my_log.addHandler(file)
             my_log.error(file_name + '下载失败 ')
             my_log.error(e)
+            """
 
             # 重新下载
             async with self.download(name) as r:
@@ -147,10 +154,11 @@ if __name__ == '__main__':
     cf.read(r".\config.ini", encoding="utf-8-sig")
 
     # url = "http://bili.let-1977cdn.com/20190818/FQRL7kuS/index.m3u8"              # 保存真正m3u8文件的m3u8文件
-    url = "http://bili.let-1977cdn.com/20190818/FQRL7kuS/800kb/hls/index.m3u8"
-    # url = "https://cn1.ruioushang.com/hls/20190908/eeb179af66aa56eb381d7f7edba0fcfb/1567926692/index.m3u8"
+    # url = "http://bili.let-1977cdn.com/20190818/FQRL7kuS/800kb/hls/index.m3u8"
+    url = "https://cn1.ruioushang.com/hls/20190908/eeb179af66aa56eb381d7f7edba0fcfb/1567926692/index.m3u8"
     filename = '罗小黑战记大电影.mp4'
     speed = 20
+    isRealM3u8 = True
 
     type = cf.getint("Mode", "type")
     if type == 1:
@@ -162,7 +170,9 @@ if __name__ == '__main__':
         url = cf.get("Download", "url")
         filename = cf.get("Download", "filename") + ".mp4"
         speed = int(cf.get("Download", "speed"))
+        isRealM3u8 = False if (cf.get("Download", "isRealM3u8") == 'False') else True
 
     pm = ParseM3u8()
     pm.setStepSize(speed)
+    pm.setIsRealM3u8(isRealM3u8)
     pm.start(url, filename)
