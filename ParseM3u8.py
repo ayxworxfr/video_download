@@ -14,6 +14,7 @@ class ParseM3u8:
     total_ts = 0        # 总ts数量
     current = 1         # 正在下载ts编号
     isRealM3u8 = True   # 是否是真正的m3u8链接
+    savePath = 'default'
     list_ts = []
     headers = {
         # 'Connection': 'keep - alive',
@@ -28,9 +29,17 @@ class ParseM3u8:
     def setStepSize(self, step_size):
         self.step_size = step_size
 
+    # 设置保存路径
+    def setSavePath(self, savePath):
+        self.savePath = savePath
+
     # 功能：失败提示，失败重试，失败记录日志，线程池提高并发，超时重试。
     def start(self, url, filename):
-        download_path = os.getcwd() + "\download"
+        if self.savePath == 'default':
+            download_path = os.getcwd() + "\download"
+            self.savePath = download_path
+        else:
+            download_path = self.savePath
         if not os.path.exists(download_path):
             os.mkdir(download_path)
 
@@ -144,7 +153,13 @@ class ParseM3u8:
         os.system(cmd)
         os.system('del /Q *.ts')
         os.system('del /Q *.mp4')
+        os.system('del /Q *.mp4')
         os.rename("new.tmp", filename)
+        cmd_copy = "copy " + filename + " " + self.savePath
+        os.system(cmd_copy)
+        os.remove(filename)
+        os.chdir(os.path.abspath(os.path.dirname(os.getcwd())))
+        os.rmdir(path)
         os.system('cls')
 
 
@@ -161,6 +176,7 @@ if __name__ == '__main__':
     isRealM3u8 = True
 
     type = cf.getint("Mode", "type")
+    savePath = cf.get("Download", "savePath")
     if type == 1:
         print("请输入m3u8文件url: ")
         url = input()
@@ -171,8 +187,10 @@ if __name__ == '__main__':
         filename = cf.get("Download", "filename") + ".mp4"
         speed = int(cf.get("Download", "speed"))
         isRealM3u8 = False if (cf.get("Download", "isRealM3u8") == 'False') else True
-
+    
+    print(filename, '正在下载...')
     pm = ParseM3u8()
     pm.setStepSize(speed)
+    pm.setSavePath(savePath)
     pm.setIsRealM3u8(isRealM3u8)
     pm.start(url, filename)
