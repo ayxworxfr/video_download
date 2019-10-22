@@ -35,8 +35,8 @@ class ParseM3u8:
 
     # 功能：失败提示，失败重试，失败记录日志，线程池提高并发，超时重试。
     def start(self, url, filename):
-        if self.savePath == 'default':
-            download_path = os.getcwd() + "\download"
+        if '/' not in self.savePath and '\\' not in self.savePath:
+            download_path = os.getcwd() + "\\" + self.savePath
             self.savePath = download_path
         else:
             download_path = self.savePath
