@@ -181,18 +181,18 @@ if __name__ == '__main__':
     isRealM3u8 = True
 
     type = cf.getint("Mode", "type")
+    speed = int(cf.get("Download", "speed"))
     savePath = cf.get("Download", "savePath")
+    isRealM3u8 = False if (cf.get("Download", "isRealM3u8") == 'False') else True
     if type == 1:
+        url = cf.get("Download", "url")
+        filename = cf.get("Download", "filename") + ".mp4"
+    else:
         print("请输入m3u8文件url: ")
         url = input()
         print("请输入保存文件名称: ")
         filename = input() + ".mp4"
-    elif type == 2:
-        url = cf.get("Download", "url")
-        filename = cf.get("Download", "filename") + ".mp4"
-        speed = int(cf.get("Download", "speed"))
-        isRealM3u8 = False if (cf.get("Download", "isRealM3u8") == 'False') else True
-
+    
     print(filename, '正在下载...')
     pm = ParseM3u8()
     pm.setStepSize(speed)
